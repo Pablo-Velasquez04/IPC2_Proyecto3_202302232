@@ -86,7 +86,6 @@ def procesar():
 def generar_autorizaciones_xml(lista_solicitudes):
     root = ET.Element("LISTAAUTORIZACIONES")
     
-    # Agrupar estadísticas por fecha
     fechas = set(s["solicitud"].fecha for s in lista_solicitudes.solicitudes) | \
              set(lista_solicitudes.referencias_por_fecha.keys())
     for fecha in sorted(fechas):
@@ -114,10 +113,11 @@ def generar_autorizaciones_xml(lista_solicitudes):
             nit_emisor.set("ref", aprobacion["referencia"])
             nit_emisor.text = aprobacion["nit_emisor"]
             ET.SubElement(aprob, "CODIGO_APROBACION").text = aprobacion["codigo_aprobacion"]
+            ET.SubElement(aprob, "IVA").text = str(aprobacion["iva"])  # Asegurar que se usa el valor correcto
+            ET.SubElement(aprob, "VALOR").text = str(aprobacion["valor"])  # Asegurar que se usa el valor correcto
         
         ET.SubElement(listado, "TOTAL_APROBACIONES").text = str(stats["total_aprobaciones"])
     
-    # Guardar archivo
     tree = ET.ElementTree(root)
     tree.write("autorizaciones.xml", encoding="utf-8", xml_declaration=True)
 
@@ -132,7 +132,6 @@ def consultar():
         resultado = []
         
         for auth in root.findall(".//AUTORIZACION"):
-            # Usar OrderedDict para controlar el orden de los campos
             autorizacion = OrderedDict([
                 ("FECHA", auth.find("FECHA").text),
                 ("FACTURAS_RECIBIDAS", int(auth.find("FACTURAS_RECIBIDAS").text)),
@@ -153,18 +152,18 @@ def consultar():
                                 ("ref", aprob.find("NIT_EMISOR").get("ref")),
                                 ("value", aprob.find("NIT_EMISOR").text)
                             ])),
-                            ("CODIGO_APROBACION", aprob.find("CODIGO_APROBACION").text)
+                            ("CODIGO_APROBACION", aprob.find("CODIGO_APROBACION").text),
+                            ("IVA", float(aprob.find("IVA").text) if aprob.find("IVA") is not None else 0.0),
+                            ("VALOR", float(aprob.find("VALOR").text) if aprob.find("VALOR") is not None else 0.0)
                         ])
                         for aprob in auth.findall(".//APROBACION")
                     ]),
                     ("TOTAL_APROBACIONES", int(auth.find("LISTADO_AUTORIZACIONES/TOTAL_APROBACIONES").text))
                 ]))
             ])
-            print("Autorizacion antes de serializar:", autorizacion)  # Depuración
             resultado.append(autorizacion)
         
         response = {"LISTAAUTORIZACIONES": resultado}
-        print("Respuesta antes de serializar:", response)  # Depuración
         return Response(
             json.dumps(response, ensure_ascii=False),
             status=200,

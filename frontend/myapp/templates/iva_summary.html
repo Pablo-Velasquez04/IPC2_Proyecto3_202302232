@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Resumen de IVA por Fecha y NIT</h1>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="date" class="form-label">Seleccionar Fecha</label>
+        <input type="date" class="form-control" id="date" name="date" value="{{ date }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+</form>
+{% if iva_data_json %}
+    <!-- Pasar los datos como JSON -->
+    <script id="iva-data" type="application/json">
+        {{ iva_data_json|safe }}
+    </script>
+    <canvas id="ivaChart" class="mt-4"></canvas>
+    <script>
+        // Obtener los datos del script
+        const ivaData = JSON.parse(document.getElementById('iva-data').textContent);
+        const labels = ivaData.map(item => item.nit);
+        const ivaValues = ivaData.map(item => parseFloat(item.iva)); // Asegurarse de que sean números
+
+        console.log("Labels:", labels);  // Depuración
+        console.log("IVA Values:", ivaValues);  // Depuración
+
+        const ctx = document.getElementById('ivaChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'IVA Emitido/Recibido',
+                    data: ivaValues,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'IVA (Q)' },
+                        suggestedMax: 30
+                    },
+                    x: {
+                        title: { display: true, text: 'NIT' }
+                    }
+                }
+            }
+        });
+    </script>
+{% else %}
+    <p>No hay datos para mostrar.</p>
+{% endif %}
+{% endblock %}

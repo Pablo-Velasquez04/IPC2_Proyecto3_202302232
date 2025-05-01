@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Consultar Datos</h1>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+{% if data %}
+    <h2>Datos de Autorizaciones</h2>
+    <pre>{{ data|safe }}</pre>
+{% else %}
+    <p>No hay datos disponibles.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Resumen por Rango de Fechas</h1>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="start_date" class="form-label">Fecha Inicio</label>
+        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+    </div>
+    <div class="mb-3">
+        <label for="end_date" class="form-label">Fecha Fin</label>
+        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+    </div>
+    <div class="mb-3">
+        <label for="value_type" class="form-label">Tipo de Valor</label>
+        <select class="form-control" id="value_type" name="value_type">
+            <option value="total" {% if value_type == 'total' %}selected{% endif %}>Total</option>
+            <option value="sin_iva" {% if value_type == 'sin_iva' %}selected{% endif %}>Sin IVA</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+</form>
+{% if range_data_json %}
+    <!-- Pasar los datos como JSON -->
+    <script id="range-data" type="application/json">
+        {{ range_data_json|safe }}
+    </script>
+    <canvas id="rangeChart" class="mt-4"></canvas>
+    <script>
+        // Obtener los datos del script
+        const rangeData = JSON.parse(document.getElementById('range-data').textContent);
+        const labels = rangeData.map(item => item.date);
+        const values = rangeData.map(item => parseFloat(item.value)); // Asegurarse de que sean números
+
+        console.log("Labels:", labels);  // Depuración
+        console.log("Values:", values);  // Depuración
+
+        const ctx = document.getElementById('rangeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Valores Autorizados',
+                    data: values,
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,  // Hacer la línea más gruesa
+                    pointRadius: 5,  // Mostrar puntos
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',  // Color de los puntos
+                    pointBorderColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderWidth: 1,
+                    showLine: true,  // Asegurar que la línea se muestre
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Valor (Q)' },
+                        suggestedMax: 400
+                    },
+                    x: {
+                        title: { display: true, text: 'Fecha' }
+                    }
+                }
+            }
+        });
+    </script>
+{% else %}
+    <p>No hay datos para mostrar.</p>
+{% endif %}
+{% endblock %}

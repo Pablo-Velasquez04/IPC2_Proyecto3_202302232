@@ -33,26 +33,7 @@
         <p>Total Aprobaciones: {{ auth.LISTADO_AUTORIZACIONES.TOTAL_APROBACIONES }}</p>
     {% endfor %}
 
-    <!-- Sección para las gráficas -->
-    <h2>Resumen de IVA por Fecha y NIT</h2>
-    <label for="fechaFiltro">Seleccionar Fecha:</label>
-    <input type="text" id="fechaFiltro" placeholder="DD/MM/YYYY" value="16/01/2025">
-    <button onclick="actualizarGraficaIVA()">Filtrar</button>
-    <canvas id="chartIVAporFechaNIT" width="400" height="200"></canvas>
-
-    <h2>Resumen por Rango de Fechas</h2>
-    <label for="fechaInicio">Fecha Inicio:</label>
-    <input type="text" id="fechaInicio" placeholder="DD/MM/YYYY" value="16/01/2025">
-    <label for="fechaFin">Fecha Fin:</label>
-    <input type="text" id="fechaFin" placeholder="DD/MM/YYYY" value="19/01/2025">
-    <label for="tipoValor">Tipo de Valor:</label>
-    <select id="tipoValor">
-        <option value="IVA">IVA</option>
-        <option value="VALOR">Valor</option>
-        <option value="TOTAL" selected>Total</option>
-    </select>
-    <button onclick="actualizarGraficaRango()">Filtrar</button>
-    <canvas id="chartRangoFechas" width="400" height="200"></canvas>
+    
 
 {% else %}
     <p>No hay datos disponibles.</p>

@@ -2,6 +2,7 @@
 from django.urls import path, include
 from . import views  # Importar desde el mismo paquete
 
+
 urlpatterns = [
     path('', views.upload, name='upload'),
     path('consult/', views.consult, name='consult'),
@@ -12,4 +13,5 @@ urlpatterns = [
     path('reset/', views.reset, name='reset'),
     # Si dte_app tiene sus propias URLs, las incluimos aquí
     path('dte/', include('dte_app.urls')),
+    
 ]

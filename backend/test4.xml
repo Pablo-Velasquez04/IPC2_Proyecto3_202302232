@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SOLICITUD_AUTORIZACION>
+    <DTE>
+        <TIEMPO>Guatemala, 16/01/2025 15:25</TIEMPO>
+        <REFERENCIA>C3001</REFERENCIA>
+        <NIT_EMISOR>73781</NIT_EMISOR> <!-- NIT inválido (falta dígito verificador) -->
+        <NIT_RECEPTOR>123456K</NIT_RECEPTOR>
+        <VALOR>100.00</VALOR>
+        <IVA>10.00</IVA> <!-- Mal calculado: 100.00 * 0.12 = 12.00 -->
+        <TOTAL>109.00</TOTAL> <!-- Mal calculado: 100.00 + 12.00 = 112.00 -->
+    </DTE>
+    <DTE>
+        <TIEMPO>Guatemala, 16/01/2025 17:22</TIEMPO>
+        <REFERENCIA>C3001</REFERENCIA> <!-- Duplicación -->
+        <NIT_EMISOR>737810K</NIT_EMISOR>
+        <NIT_RECEPTOR>123456K</NIT_RECEPTOR>
+        <VALOR>150.00</VALOR>
+        <IVA>15.00</IVA> <!-- Mal calculado: 150.00 * 0.12 = 18.00 -->
+        <TOTAL>164.00</TOTAL> <!-- Mal calculado: 150.00 + 18.00 = 168.00 -->
+    </DTE>
+    <DTE>
+        <TIEMPO>Guatemala, 17/01/2025 20:25</TIEMPO>
+        <REFERENCIA>C3002</REFERENCIA>
+        <NIT_EMISOR>737810K</NIT_EMISOR>
+        <NIT_RECEPTOR>123457K</NIT_RECEPTOR> <!-- NIT inválido -->
+        <VALOR>200.00</VALOR>
+        <IVA>24.00</IVA> <!-- Correcto: 200.00 * 0.12 = 24.00 -->
+        <TOTAL>224.00</TOTAL> <!-- Correcto: 200.00 + 24.00 = 224.00 -->
+    </DTE>
+    <DTE>
+        <TIEMPO>Guatemala, 18/01/2025 17:25</TIEMPO>
+        <REFERENCIA>C3003</REFERENCIA>
+        <NIT_EMISOR>123456K</NIT_EMISOR> <!-- NIT válido pero diferente -->
+        <NIT_RECEPTOR>737810K</NIT_RECEPTOR> <!-- NIT válido pero diferente -->
+        <VALOR>300.00</VALOR>
+        <IVA>36.00</IVA> <!-- Correcto: 300.00 * 0.12 = 36.00 -->
+        <TOTAL>336.00</TOTAL> <!-- Correcto: 300.00 + 36.00 = 336.00 -->
+    </DTE>
+    <DTE>
+        <TIEMPO>Guatemala, 19/01/2025 18:25</TIEMPO>
+        <REFERENCIA>C3004</REFERENCIA>
+        <NIT_EMISOR>737810K</NIT_EMISOR>
+        <NIT_RECEPTOR>123456K</NIT_RECEPTOR>
+        <VALOR>400.00</VALOR>
+        <IVA>48.00</IVA> <!-- Correcto: 400.00 * 0.12 = 48.00 -->
+        <TOTAL>448.00</TOTAL> <!-- Correcto: 400.00 + 48.00 = 448.00 -->
+    </DTE>
+</SOLICITUD_AUTORIZACION>

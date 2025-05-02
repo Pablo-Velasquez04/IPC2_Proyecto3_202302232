@@ -6,18 +6,33 @@
         <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">{{ message }}</div>
     {% endfor %}
 {% endif %}
+<style>
+    .mb-3 {
+        display: inline-block;
+        width: 48%;
+        vertical-align: top;
+    }
+    textarea {
+        white-space: pre; /* Preserva espacios y saltos de línea */
+        font-family: monospace; /* Usa una fuente monoespaciada para mejor legibilidad */
+    }
+</style>
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="mb-3">
-        <label for="xml_file" class="form-label">Seleccionar Archivo XML</label>
+        <h3>Entrada</h3>
+        <textarea name="entrada" rows="10" cols="50" placeholder="Pega el XML aquí" class="form-control">{{ entrada }}</textarea>
+    </div>
+    <div class="mb-3">
+        <h3>Salida</h3>
+        <textarea name="salida" rows="10" cols="50" readonly class="form-control">{{ salida }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="xml_file" class="form-label">O Seleccionar Archivo XML</label>
         <input type="file" class="form-control" id="xml_file" name="xml_file" accept=".xml">
     </div>
     <button type="submit" class="btn btn-primary">Cargar</button>
     <a href="{% url 'send' %}" class="btn btn-success">Enviar</a>
     <a href="{% url 'reset' %}" class="btn btn-danger">Reset</a>
 </form>
-{% if response %}
-    <h2 class="mt-4">Respuesta del Servidor</h2>
-    <pre>{{ response|json_script:"response-data" }}</pre>
-{% endif %}
 {% endblock %}

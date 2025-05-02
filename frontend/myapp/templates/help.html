@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Ayuda</h1>
+    </div>
+    <div class="card-body">
+        <h2 class="card-title">Información Personal</h2>
+        <div class="card-text">
+            <p><strong>Nombre:</strong> Pablo Daniel Velásquez Hernández</p>
+            <p><strong>Carnet:</strong> 202302232</p>
+            <p><strong>Curso:</strong> Laboratorio Introducción a la programación y computación 2 </p>
+            <p><strong>Correo Electrónico:</strong> pablo.2020187@gmail.com</p>
+            <p><strong>Teléfono:</strong> 5849-3837</p>
+        </div>
+
+        <h2 class="card-title mt-4">Documentación del Programa</h2>
+        <div class="card-text">
+            <p>Aquí puedes acceder y descargar la documentación del proyecto:</p>
+            <ul class="list-group">
+                <li class="list-group-item"><a href="{% static 'documentacion/Diagramas_Proyecto3.pdf' %}" target="_blank" class="btn btn-primary btn-sm">Diagramas del Proyecto</a></li>
+                <li class="list-group-item"><a href="{% static 'documentacion/EnsayoProyecto3.pdf' %}" target="_blank" class="btn btn-primary btn-sm">Ensayo del Proyecto</a></li>
+            </ul>
+            <p class="mt-2">Nota: Todos los archivos son para fines de entender el programa web</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

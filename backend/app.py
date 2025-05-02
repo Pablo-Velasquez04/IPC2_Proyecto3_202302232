@@ -20,130 +20,158 @@ def cargar():
         except ET.ParseError as e:
             return Response(json.dumps({"error": f"Formato de XML inválido: {str(e)}"}), status=400, mimetype='application/json')
 
-        first_dte = root.find("DTE")
-        if first_dte is None:
-            return Response(json.dumps({"error": "No se encontraron elementos DTE en el XML"}), status=400, mimetype='application/json')
+        # Agrupar DTEs por fecha
+        dtes_by_date = {}
+        for dte in root.findall("DTE"):
+            tiempo = dte.find("TIEMPO")
+            if tiempo is None or not tiempo.text:
+                continue
+            match = re.search(r'\d{2}/\d{2}/\d{4}', tiempo.text)
+            if not match:
+                continue
+            fecha = match.group(0)
+            if fecha not in dtes_by_date:
+                dtes_by_date[fecha] = []
+            dtes_by_date[fecha].append(dte)
 
-        tiempo = first_dte.find("TIEMPO")
-        if tiempo is None or not tiempo.text:
-            return Response(json.dumps({"error": "El elemento TIEMPO no está presente o está vacío en el primer DTE"}), status=400, mimetype='application/json')
-
-        match = re.search(r'\d{2}/\d{2}/\d{4}', tiempo.text)
-        if not match:
-            return Response(json.dumps({"error": "Formato de fecha inválido en TIEMPO"}), status=400, mimetype='application/json')
-        fecha = match.group(0)
+        if not dtes_by_date:
+            return Response(json.dumps({"error": "No se encontraron DTEs con fechas válidas"}), status=400, mimetype='application/json')
 
         existing_root = ET.Element("LISTAAUTORIZACIONES")
-
-        facturas_recibidas = 0
-        errores = {
+        global_approval_counter = 1  # Contador global para CODIGO_APROBACION
+        total_facturas_recibidas = 0
+        total_facturas_correctas = 0
+        global_errores = {
             "NIT_EMISOR": 0,
             "NIT_RECEPTOR": 0,
             "IVA": 0,
             "TOTAL": 0,
             "REFERENCIA_DUPLICADA": 0
         }
-        facturas_correctas = 0
-        emisor_nits = set()
-        receptor_nits = set()
-        referencias = set()
 
-        aprobaciones = []
+        for fecha, dtes in dtes_by_date.items():
+            facturas_recibidas = 0
+            errores = {
+                "NIT_EMISOR": 0,
+                "NIT_RECEPTOR": 0,
+                "IVA": 0,
+                "TOTAL": 0,
+                "REFERENCIA_DUPLICADA": 0
+            }
+            facturas_correctas = 0
+            emisor_nits = set()
+            receptor_nits = set()
+            referencias = set()
+            aprobaciones = []
 
-        for dte in root.findall("DTE"):
-            facturas_recibidas += 1
-            nit_emisor = dte.find("NIT_EMISOR")
-            nit_receptor = dte.find("NIT_RECEPTOR")
-            valor_elem = dte.find("VALOR")
-            iva_elem = dte.find("IVA")
-            total_elem = dte.find("TOTAL")
-            referencia = dte.find("REFERENCIA")
+            for dte in dtes:
+                facturas_recibidas += 1
+                nit_emisor = dte.find("NIT_EMISOR")
+                nit_receptor = dte.find("NIT_RECEPTOR")
+                valor_elem = dte.find("VALOR")
+                iva_elem = dte.find("IVA")
+                total_elem = dte.find("TOTAL")
+                referencia = dte.find("REFERENCIA")
 
-            # Verificar si todos los elementos existen
-            if not all(elem is not None for elem in [nit_emisor, nit_receptor, valor_elem, iva_elem, total_elem, referencia]):
-                continue
+                if not all(elem is not None for elem in [nit_emisor, nit_receptor, valor_elem, iva_elem, total_elem, referencia]):
+                    continue
 
-            nit_emisor_text = nit_emisor.text.strip() if nit_emisor.text else ""
-            nit_receptor_text = nit_receptor.text.strip() if nit_receptor.text else ""
-            try:
-                valor = float(valor_elem.text.strip())
-                iva = float(iva_elem.text.strip())
-                total = float(total_elem.text.strip())
-            except ValueError as e:
-                print(f"Error al convertir valores: {e}")
-                errores["TOTAL"] += 1
-                continue
-            referencia_text = referencia.text.strip() if referencia.text else ""
+                nit_emisor_text = nit_emisor.text.strip() if nit_emisor.text else ""
+                nit_receptor_text = nit_receptor.text.strip() if nit_receptor.text else ""
+                try:
+                    valor = float(valor_elem.text.strip())
+                    iva = float(iva_elem.text.strip())
+                    total = float(total_elem.text.strip())
+                except ValueError as e:
+                    print(f"Error al convertir valores: {e}")
+                    errores["TOTAL"] += 1
+                    global_errores["TOTAL"] += 1
+                    continue
+                referencia_text = referencia.text.strip() if referencia.text else ""
 
-            error = False
-            print(f"Validando DTE - Valor: {valor}, IVA: {iva}, Total: {total}")  # Depuración
+                error = False
+                print(f"Validando DTE - Valor: {valor}, IVA: {iva}, Total: {total}")  # Depuración
 
-            if not nit_emisor_text or not nit_emisor_text.isalnum():
-                errores["NIT_EMISOR"] += 1
-                error = True
-            if not nit_receptor_text or not nit_receptor_text.isalnum():
-                errores["NIT_RECEPTOR"] += 1
-                error = True
-            if iva <= 0:
-                errores["IVA"] += 1
-                error = True
-            # Validación de TOTAL con redondeo explícito
-            expected_total = round(valor + iva, 2)
-            print(f"Expected Total: {expected_total}, Actual Total: {total}")  # Depuración
-            if abs(total - expected_total) > 0.01:
-                errores["TOTAL"] += 1
-                error = True
-                print(f"Error en TOTAL: Esperado {expected_total}, Obtenido {total}")
-            if referencia_text in referencias:
-                errores["REFERENCIA_DUPLICADA"] += 1
-                error = True
-            else:
-                referencias.add(referencia_text)
+                if not nit_emisor_text or not nit_emisor_text.isalnum():
+                    errores["NIT_EMISOR"] += 1
+                    global_errores["NIT_EMISOR"] += 1
+                    error = True
+                if not nit_receptor_text or not nit_receptor_text.isalnum():
+                    errores["NIT_RECEPTOR"] += 1
+                    global_errores["NIT_RECEPTOR"] += 1
+                    error = True
+                if iva <= 0:
+                    errores["IVA"] += 1
+                    global_errores["IVA"] += 1
+                    error = True
+                expected_total = round(valor + iva, 2)
+                print(f"Expected Total: {expected_total}, Actual Total: {total}")  # Depuración
+                if abs(total - expected_total) > 0.01:
+                    errores["TOTAL"] += 1
+                    global_errores["TOTAL"] += 1
+                    error = True
+                    print(f"Error en TOTAL: Esperado {expected_total}, Obtenido {total}")
+                if referencia_text in referencias:
+                    errores["REFERENCIA_DUPLICADA"] += 1
+                    global_errores["REFERENCIA_DUPLICADA"] += 1
+                    error = True
+                else:
+                    referencias.add(referencia_text)
 
-            if not error:
-                facturas_correctas += 1
-                emisor_nits.add(nit_emisor_text)
-                receptor_nits.add(nit_receptor_text)
+                if not error:
+                    facturas_correctas += 1
+                    emisor_nits.add(nit_emisor_text)
+                    receptor_nits.add(nit_receptor_text)
 
-                aprobacion = {
-                    "NIT_EMISOR": {"ref": referencia_text, "value": nit_emisor_text},
-                    "CODIGO_APROBACION": f"{fecha.replace('/', '')}{referencia_text.zfill(8)}",
-                    "IVA": iva,
-                    "VALOR": valor
-                }
-                aprobaciones.append(aprobacion)
+                    fecha_code = fecha.replace('/', '')
+                    sequential_number = str(global_approval_counter).zfill(8)
+                    codigo_aprobacion = f"{fecha_code}{sequential_number}"
+                    aprobacion = {
+                        "NIT_EMISOR": {"ref": referencia_text, "value": nit_emisor_text},
+                        "CODIGO_APROBACION": codigo_aprobacion,
+                        "IVA": iva,
+                        "VALOR": valor,
+                        "TOTAL": total
+                    }
+                    aprobaciones.append(aprobacion)
+                    global_approval_counter += 1
 
-        autorizacion = ET.SubElement(existing_root, "AUTORIZACION")
-        fecha_elem = ET.SubElement(autorizacion, "FECHA")
-        fecha_elem.text = fecha
-        facturas_recibidas_elem = ET.SubElement(autorizacion, "FACTURAS_RECIBIDAS")
-        facturas_recibidas_elem.text = str(facturas_recibidas)
-        errores_elem = ET.SubElement(autorizacion, "ERRORES")
-        for key, value in errores.items():
-            error_elem = ET.SubElement(errores_elem, key)
-            error_elem.text = str(value)
-        facturas_correctas_elem = ET.SubElement(autorizacion, "FACTURAS_CORRECTAS")
-        facturas_correctas_elem.text = str(facturas_correctas)
-        cantidad_emisores_elem = ET.SubElement(autorizacion, "CANTIDAD_EMISORES")
-        cantidad_emisores_elem.text = str(len(emisor_nits))
-        cantidad_receptores_elem = ET.SubElement(autorizacion, "CANTIDAD_RECEPTORES")
-        cantidad_receptores_elem.text = str(len(receptor_nits))
+            total_facturas_recibidas += facturas_recibidas
+            total_facturas_correctas += facturas_correctas
 
-        listado_autorizaciones = ET.SubElement(autorizacion, "LISTADO_AUTORIZACIONES")
-        aprobacion_elem = ET.SubElement(listado_autorizaciones, "APROBACION")
-        for aprob in aprobaciones:
-            dte_elem = ET.SubElement(aprobacion_elem, "DTE")
-            nit_emisor_elem = ET.SubElement(dte_elem, "NIT_EMISOR")
-            nit_emisor_elem.set("ref", aprob["NIT_EMISOR"]["ref"])
-            nit_emisor_elem.text = aprob["NIT_EMISOR"]["value"]
-            codigo_elem = ET.SubElement(dte_elem, "CODIGO_APROBACION")
-            codigo_elem.text = aprob["CODIGO_APROBACION"]
-            iva_elem = ET.SubElement(dte_elem, "IVA")
-            iva_elem.text = str(aprob["IVA"])
-            valor_elem = ET.SubElement(dte_elem, "VALOR")
-            valor_elem.text = str(aprob["VALOR"])
-        total_aprobaciones_elem = ET.SubElement(listado_autorizaciones, "TOTAL_APROBACIONES")
-        total_aprobaciones_elem.text = str(len(aprobaciones))
+            autorizacion = ET.SubElement(existing_root, "AUTORIZACION")
+            fecha_elem = ET.SubElement(autorizacion, "FECHA")
+            fecha_elem.text = fecha
+            facturas_recibidas_elem = ET.SubElement(autorizacion, "FACTURAS_RECIBIDAS")
+            facturas_recibidas_elem.text = str(facturas_recibidas)
+            errores_elem = ET.SubElement(autorizacion, "ERRORES")
+            for key, value in errores.items():
+                error_elem = ET.SubElement(errores_elem, key)
+                error_elem.text = str(value)
+            facturas_correctas_elem = ET.SubElement(autorizacion, "FACTURAS_CORRECTAS")
+            facturas_correctas_elem.text = str(facturas_correctas)
+            cantidad_emisores_elem = ET.SubElement(autorizacion, "CANTIDAD_EMISORES")
+            cantidad_emisores_elem.text = str(len(emisor_nits))
+            cantidad_receptores_elem = ET.SubElement(autorizacion, "CANTIDAD_RECEPTORES")
+            cantidad_receptores_elem.text = str(len(receptor_nits))
+
+            listado_autorizaciones = ET.SubElement(autorizacion, "LISTADO_AUTORIZACIONES")
+            aprobacion_elem = ET.SubElement(listado_autorizaciones, "APROBACION")
+            for aprob in aprobaciones:
+                dte_elem = ET.SubElement(aprobacion_elem, "DTE")
+                nit_emisor_elem = ET.SubElement(dte_elem, "NIT_EMISOR")
+                nit_emisor_elem.set("ref", aprob["NIT_EMISOR"]["ref"])
+                nit_emisor_elem.text = aprob["NIT_EMISOR"]["value"]
+                codigo_elem = ET.SubElement(dte_elem, "CODIGO_APROBACION")
+                codigo_elem.text = aprob["CODIGO_APROBACION"]
+                iva_elem = ET.SubElement(dte_elem, "IVA")
+                iva_elem.text = str(aprob["IVA"])
+                valor_elem = ET.SubElement(dte_elem, "VALOR")
+                valor_elem.text = str(aprob["VALOR"])
+                total_elem = ET.SubElement(dte_elem, "TOTAL")
+                total_elem.text = str(aprob["TOTAL"])
+            total_aprobaciones_elem = ET.SubElement(listado_autorizaciones, "TOTAL_APROBACIONES")
+            total_aprobaciones_elem.text = str(len(aprobaciones))
 
         tree = ET.ElementTree(existing_root)
         tree.write("autorizaciones.xml", encoding="utf-8", xml_declaration=True)
@@ -151,12 +179,13 @@ def cargar():
 
         response = {
             "message": "Archivo procesado correctamente",
-            "facturas_recibidas": facturas_recibidas,
-            "facturas_correctas": facturas_correctas,
-            "errores": errores
+            "facturas_recibidas": total_facturas_recibidas,
+            "facturas_correctas": total_facturas_correctas,
+            "errores": global_errores
         }
         return Response(json.dumps(response), status=200, mimetype='application/json')
     except Exception as e:
+        print(f"Error en /cargar: {str(e)}")  # Depuración
         return Response(json.dumps({"error": f"Error interno: {str(e)}"}), status=500, mimetype='application/json')
     
 
@@ -180,12 +209,12 @@ def consultar():
             facturas_recibidas = int(auth.find("FACTURAS_RECIBIDAS").text) if auth.find("FACTURAS_RECIBIDAS") is not None else 0
             errores_elem = auth.find("ERRORES")
             errores = {
-                "NIT_EMISOR": int(errores_elem.find("NIT_EMISOR").text) if errores_elem and errores_elem.find("NIT_EMISOR") is not None else 0,
-                "NIT_RECEPTOR": int(errores_elem.find("NIT_RECEPTOR").text) if errores_elem and errores_elem.find("NIT_RECEPTOR") is not None else 0,
-                "IVA": int(errores_elem.find("IVA").text) if errores_elem and errores_elem.find("IVA") is not None else 0,
-                "TOTAL": int(errores_elem.find("TOTAL").text) if errores_elem and errores_elem.find("TOTAL") is not None else 0,
-                "REFERENCIA_DUPLICADA": int(errores_elem.find("REFERENCIA_DUPLICADA").text) if errores_elem and errores_elem.find("REFERENCIA_DUPLICADA") is not None else 0
-            } if errores_elem else {
+                "NIT_EMISOR": int(errores_elem.find("NIT_EMISOR").text) if errores_elem is not None and errores_elem.find("NIT_EMISOR") is not None else 0,
+                "NIT_RECEPTOR": int(errores_elem.find("NIT_RECEPTOR").text) if errores_elem is not None and errores_elem.find("NIT_RECEPTOR") is not None else 0,
+                "IVA": int(errores_elem.find("IVA").text) if errores_elem is not None and errores_elem.find("IVA") is not None else 0,
+                "TOTAL": int(errores_elem.find("TOTAL").text) if errores_elem is not None and errores_elem.find("TOTAL") is not None else 0,
+                "REFERENCIA_DUPLICADA": int(errores_elem.find("REFERENCIA_DUPLICADA").text) if errores_elem is not None and errores_elem.find("REFERENCIA_DUPLICADA") is not None else 0
+            } if errores_elem is not None else {
                 "NIT_EMISOR": 0,
                 "NIT_RECEPTOR": 0,
                 "IVA": 0,
@@ -210,7 +239,8 @@ def consultar():
                             },
                             "CODIGO_APROBACION": dte.find("CODIGO_APROBACION").text if dte.find("CODIGO_APROBACION") is not None else "",
                             "IVA": float(dte.find("IVA").text) if dte.find("IVA") is not None else 0.0,
-                            "VALOR": float(dte.find("VALOR").text) if dte.find("VALOR") is not None else 0.0
+                            "VALOR": float(dte.find("VALOR").text) if dte.find("VALOR") is not None else 0.0,
+                            "TOTAL": float(dte.find("TOTAL").text) if dte.find("TOTAL") is not None else 0.0  # Añadimos TOTAL
                         }
                         for dte in aprobacion_elem.findall("DTE")
                     ]

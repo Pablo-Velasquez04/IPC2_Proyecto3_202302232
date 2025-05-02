@@ -1,15 +1,38 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1>Consultar Datos</h1>
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-danger">{{ message }}</div>
+{% if autorizaciones %}
+    {% for auth in autorizaciones %}
+        <h3>Fecha: {{ auth.FECHA }}</h3>
+        <p>Facturas Recibidas: {{ auth.FACTURAS_RECIBIDAS }}</p>
+        <p>Facturas Correctas: {{ auth.FACTURAS_CORRECTAS }}</p>
+        <p>Cantidad Emisores: {{ auth.CANTIDAD_EMISORES }}</p>
+        <p>Cantidad Receptores: {{ auth.CANTIDAD_RECEPTORES }}</p>
+        <h4>Errores:</h4>
+        <ul>
+            <li>NIT Emisor: {{ auth.ERRORES.NIT_EMISOR }}</li>
+            <li>NIT Receptor: {{ auth.ERRORES.NIT_RECEPTOR }}</li>
+            <li>IVA: {{ auth.ERRORES.IVA }}</li>
+            <li>Total: {{ auth.ERRORES.TOTAL }}</li>
+            <li>Referencia Duplicada: {{ auth.ERRORES.REFERENCIA_DUPLICADA }}</li>
+        </ul>
+        <h4>Aprobaciones:</h4>
+        <ul>
+            {% for aprob in auth.LISTADO_AUTORIZACIONES.APROBACION %}
+                <li>
+                    NIT Emisor: {{ aprob.NIT_EMISOR.value }} (Ref: {{ aprob.NIT_EMISOR.ref }})<br>
+                    Código Aprobación: {{ aprob.CODIGO_APROBACION }}<br>
+                    IVA: {{ aprob.IVA }}<br>
+                    Valor: {{ aprob.VALOR }}
+                </li>
+            {% empty %}
+                <li>No hay aprobaciones.</li>
+            {% endfor %}
+        </ul>
+        <p>Total Aprobaciones: {{ auth.LISTADO_AUTORIZACIONES.TOTAL_APROBACIONES }}</p>
     {% endfor %}
-{% endif %}
-{% if data %}
-    <h2>Datos de Autorizaciones</h2>
-    <pre>{{ data|safe }}</pre>
 {% else %}
     <p>No hay datos disponibles.</p>
 {% endif %}
+<a href="{% url 'upload' %}" class="btn btn-primary">Volver</a>
 {% endblock %}

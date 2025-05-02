@@ -3,21 +3,21 @@
 <h1>Cargar Archivo XML</h1>
 {% if messages %}
     {% for message in messages %}
-        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
-            {{ message }}
-        </div>
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">{{ message }}</div>
     {% endfor %}
 {% endif %}
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="mb-3">
-        <label for="xml_file" class="form-label">Seleccionar archivo XML</label>
+        <label for="xml_file" class="form-label">Seleccionar Archivo XML</label>
         <input type="file" class="form-control" id="xml_file" name="xml_file" accept=".xml">
     </div>
     <button type="submit" class="btn btn-primary">Cargar</button>
+    <a href="{% url 'send' %}" class="btn btn-success">Enviar</a>
+    <a href="{% url 'reset' %}" class="btn btn-danger">Reset</a>
 </form>
 {% if response %}
-    <h2>Respuesta del Servidor</h2>
-    <pre>{{ response|safe }}</pre>
+    <h2 class="mt-4">Respuesta del Servidor</h2>
+    <pre>{{ response|json_script:"response-data" }}</pre>
 {% endif %}
 {% endblock %}

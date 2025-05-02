@@ -16,7 +16,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dte_app',
+    'myapp',    # Proyecto principal
+    'dte_app',  # Aplicación adicional
 ]
 
 MIDDLEWARE = [

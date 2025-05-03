@@ -1,30 +1,72 @@
 {% extends 'base.html' %}
+<!-- Extiende la plantilla base.html, lo que significa que este archivo hereda la estructura y estilos definidos en base.html -->
+
 {% load static %}
+<!-- Carga la etiqueta 'static' de Django para manejar archivos estáticos como imágenes, CSS o documentos -->
 
 {% block content %}
+<!-- Inicia un bloque de contenido que reemplazará el bloque 'content' definido en base.html -->
+
 <div class="card">
+    <!-- Crea un contenedor con la clase 'card' para aplicar estilos de Bootstrap -->
+
     <div class="card-header">
+        <!-- Encabezado de la tarjeta -->
         <h1>Ayuda</h1>
+        <!-- Título principal de la sección -->
     </div>
+
     <div class="card-body">
+        <!-- Cuerpo de la tarjeta -->
+
         <h2 class="card-title">Información Personal</h2>
+        <!-- Subtítulo para la sección de información personal -->
+
         <div class="card-text">
+            <!-- Contenedor para el texto de la tarjeta -->
             <p><strong>Nombre:</strong> Pablo Daniel Velásquez Hernández</p>
+            <!-- Muestra el nombre del usuario -->
             <p><strong>Carnet:</strong> 202302232</p>
+            <!-- Muestra el número de carnet -->
             <p><strong>Curso:</strong> Laboratorio Introducción a la programación y computación 2 </p>
+            <!-- Muestra el curso -->
             <p><strong>Correo Electrónico:</strong> pablo.2020187@gmail.com</p>
+            <!-- Muestra el correo electrónico -->
             <p><strong>Teléfono:</strong> 5849-3837</p>
+            <!-- Muestra el número de teléfono -->
         </div>
 
         <h2 class="card-title mt-4">Documentación del Programa</h2>
+        <!-- Subtítulo para la sección de documentación del programa -->
+
         <div class="card-text">
+            <!-- Contenedor para el texto de la tarjeta -->
             <p>Aquí puedes acceder y descargar la documentación del proyecto:</p>
+            <!-- Explicación breve sobre la documentación -->
+
             <ul class="list-group">
-                <li class="list-group-item"><a href="{% static 'documentacion/Diagramas_Proyecto3.pdf' %}" target="_blank" class="btn btn-primary btn-sm">Diagramas del Proyecto</a></li>
-                <li class="list-group-item"><a href="{% static 'documentacion/EnsayoProyecto3.pdf' %}" target="_blank" class="btn btn-primary btn-sm">Ensayo del Proyecto</a></li>
+                <!-- Lista de elementos con estilo de Bootstrap -->
+                <li class="list-group-item">
+                    <!-- Elemento de la lista -->
+                    <a href="{% static 'documentacion/Diagramas_Proyecto3.pdf' %}" target="_blank" class="btn btn-primary btn-sm">
+                        <!-- Enlace al archivo PDF de diagramas del proyecto -->
+                        Diagramas del Proyecto
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <!-- Otro elemento de la lista -->
+                    <a href="{% static 'documentacion/EnsayoProyecto3.pdf' %}" target="_blank" class="btn btn-primary btn-sm">
+                        <!-- Enlace al archivo PDF del ensayo del proyecto -->
+                        Ensayo del Proyecto
+                    </a>
+                </li>
             </ul>
+
             <p class="mt-2">Nota: Todos los archivos son para fines de entender el programa web</p>
+            <!-- Nota aclaratoria sobre los archivos -->
         </div>
     </div>
 </div>
+
 {% endblock %}
+<!-- Finaliza el bloque de contenido -->

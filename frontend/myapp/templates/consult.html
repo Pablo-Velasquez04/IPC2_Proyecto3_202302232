@@ -1,105 +1,140 @@
 {% extends 'base.html' %}
+<!-- Extiende la plantilla base.html para reutilizar su estructura -->
+
 {% block content %}
+<!-- Bloque de contenido que se insertará en la plantilla base -->
+
 <h1>Consultar Datos</h1>
+<!-- Título principal de la página -->
+
 {% if autorizaciones %}
+<!-- Verifica si existen datos en la variable 'autorizaciones' -->
+
     {% for auth in autorizaciones %}
+    <!-- Itera sobre cada elemento en 'autorizaciones' -->
+
         <h3>Fecha: {{ auth.FECHA }}</h3>
+        <!-- Muestra la fecha de la autorización -->
+
         <p>Facturas Recibidas: {{ auth.FACTURAS_RECIBIDAS }}</p>
+        <!-- Muestra la cantidad de facturas recibidas -->
+
         <p>Facturas Correctas: {{ auth.FACTURAS_CORRECTAS }}</p>
+        <!-- Muestra la cantidad de facturas correctas -->
+
         <p>Cantidad Emisores: {{ auth.CANTIDAD_EMISORES }}</p>
+        <!-- Muestra la cantidad de emisores -->
+
         <p>Cantidad Receptores: {{ auth.CANTIDAD_RECEPTORES }}</p>
+        <!-- Muestra la cantidad de receptores -->
+
         <h4>Errores:</h4>
+        <!-- Encabezado para la sección de errores -->
+
         <ul>
+            <!-- Lista de errores -->
             <li>NIT Emisor: {{ auth.ERRORES.NIT_EMISOR }}</li>
             <li>NIT Receptor: {{ auth.ERRORES.NIT_RECEPTOR }}</li>
             <li>IVA: {{ auth.ERRORES.IVA }}</li>
             <li>Total: {{ auth.ERRORES.TOTAL }}</li>
             <li>Referencia Duplicada: {{ auth.ERRORES.REFERENCIA_DUPLICADA }}</li>
         </ul>
+
         <h4>Aprobaciones:</h4>
+        <!-- Encabezado para la sección de aprobaciones -->
+
         <ul>
             {% for aprob in auth.LISTADO_AUTORIZACIONES.APROBACION %}
+            <!-- Itera sobre cada aprobación en la lista -->
+
                 <li>
+                    <!-- Detalles de cada aprobación -->
                     NIT Emisor: {{ aprob.NIT_EMISOR.value }} (Ref: {{ aprob.NIT_EMISOR.ref }})<br>
                     Código Aprobación: {{ aprob.CODIGO_APROBACION }}<br>
                     IVA: {{ aprob.IVA }}<br>
                     Valor: {{ aprob.VALOR }}<br>
                     Total: {{ aprob.TOTAL }}
                 </li>
+
             {% empty %}
+                <!-- Mensaje si no hay aprobaciones -->
                 <li>No hay aprobaciones.</li>
             {% endfor %}
         </ul>
+
         <p>Total Aprobaciones: {{ auth.LISTADO_AUTORIZACIONES.TOTAL_APROBACIONES }}</p>
+        <!-- Muestra el total de aprobaciones -->
     {% endfor %}
 
-    
-
 {% else %}
+    <!-- Mensaje si no hay datos disponibles -->
     <p>No hay datos disponibles.</p>
 {% endif %}
-<a href="{% url 'upload' %}" class="btn btn-primary">Volver</a>
 
-<!-- Incluir Chart.js -->
+<a href="{% url 'upload' %}" class="btn btn-primary">Volver</a>
+<!-- Botón para volver a la página de carga -->
+
+<!-- Incluir la librería Chart.js para las gráficas -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 // Variables globales para las gráficas
-let chartIVAporFechaNIT = null;
-let chartRangoFechas = null;
+let chartIVAporFechaNIT = null; // Variable global para almacenar la instancia de la gráfica de IVA por Fecha y NIT
+let chartRangoFechas = null; // Variable global para almacenar la instancia de la gráfica de rango de fechas
 
-// Función para convertir fecha DD/MM/YYYY a objeto Date
+// Función para convertir una fecha en formato DD/MM/YYYY a un objeto Date
 function parseDate(dateStr) {
-    const [day, month, year] = dateStr.split('/');
-    return new Date(year, month - 1, day);
+    const [day, month, year] = dateStr.split('/'); // Divide la fecha en día, mes y año
+    return new Date(year, month - 1, day); // Crea un objeto Date con los valores obtenidos
 }
 
-// Gráfica: Resumen de IVA por Fecha y NIT
+// Función para actualizar la gráfica de IVA por Fecha y NIT
 async function actualizarGraficaIVA() {
-    const fechaFiltro = document.getElementById('fechaFiltro').value;
-    const response = await fetch('http://127.0.0.1:5000/consultar');
-    const data = await response.json();
-    const autorizaciones = data.LISTAAUTORIZACIONES;
+    const fechaFiltro = document.getElementById('fechaFiltro').value; // Obtiene el valor de la fecha seleccionada en el filtro
+    const response = await fetch('http://127.0.0.1:5000/consultar'); // Realiza una solicitud a la API para obtener los datos
+    const data = await response.json(); // Convierte la respuesta en formato JSON
+    const autorizaciones = data.LISTAAUTORIZACIONES; // Obtiene la lista de autorizaciones del JSON
 
-    // Agrupar IVA por NIT y fecha
+    // Objeto para agrupar el IVA por NIT y fecha
     const ivaPorFechaNIT = {};
-    autorizaciones.forEach(auth => {
-        if (auth.FECHA === fechaFiltro) {
-            auth.LISTADO_AUTORIZACIONES.APROBACION.forEach(aprob => {
-                const nit = aprob.NIT_EMISOR.value;
-                if (!ivaPorFechaNIT[nit]) {
+    autorizaciones.forEach(auth => { // Itera sobre cada autorización
+        if (auth.FECHA === fechaFiltro) { // Filtra las autorizaciones por la fecha seleccionada
+            auth.LISTADO_AUTORIZACIONES.APROBACION.forEach(aprob => { // Itera sobre cada aprobación dentro de la autorización
+                const nit = aprob.NIT_EMISOR.value; // Obtiene el NIT del emisor
+                if (!ivaPorFechaNIT[nit]) { // Si el NIT no existe en el objeto, lo inicializa
                     ivaPorFechaNIT[nit] = 0;
                 }
-                ivaPorFechaNIT[nit] += aprob.IVA;
+                ivaPorFechaNIT[nit] += aprob.IVA; // Suma el IVA al NIT correspondiente
             });
         }
     });
 
-    const labels = Object.keys(ivaPorFechaNIT);
-    const valores = Object.values(ivaPorFechaNIT);
+    const labels = Object.keys(ivaPorFechaNIT); // Obtiene los NITs como etiquetas para la gráfica
+    const valores = Object.values(ivaPorFechaNIT); // Obtiene los valores de IVA correspondientes a cada NIT
 
-    // Destruir gráfica existente si existe
+    // Destruye la gráfica existente si ya fue creada
     if (chartIVAporFechaNIT) {
         chartIVAporFechaNIT.destroy();
     }
 
-    // Crear nueva gráfica
-    const ctx = document.getElementById('chartIVAporFechaNIT').getContext('2d');
-    chartIVAporFechaNIT = new Chart(ctx, {
-        type: 'bar',
+    // Crea una nueva gráfica de barras
+    const ctx = document.getElementById('chartIVAporFechaNIT').getContext('2d'); // Obtiene el contexto del canvas para la gráfica
+    chartIVAporFechaNIT = new Chart(ctx, { // Crea una nueva instancia de Chart.js
+        type: 'bar', // Tipo de gráfica: barras
         data: {
-            labels: labels,
+            labels: labels, // Etiquetas (NITs)
             datasets: [{
-                label: 'IVA Emitido/Recibido',
-                data: valores,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
+                label: 'IVA Emitido/Recibido', // Etiqueta del conjunto de datos
+                data: valores, // Valores de IVA
+                backgroundColor: 'rgba(75, 192, 192, 0.2)', // Color de fondo de las barras
+                borderColor: 'rgba(75, 192, 192, 1)', // Color del borde de las barras
+                borderWidth: 1 // Ancho del borde de las barras
             }]
         },
         options: {
             scales: {
-                x: { title: { display: true, text: 'NIT' } },
-                y: { title: { display: true, text: 'IVA (Q)' }, beginAtZero: true }
+                x: { title: { display: true, text: 'NIT' } }, // Configuración del eje X con título
+                y: { title: { display: true, text: 'IVA (Q)' }, beginAtZero: true } // Configuración del eje Y con título y comenzando desde cero
             }
         }
     });
@@ -107,68 +142,68 @@ async function actualizarGraficaIVA() {
 
 // Gráfica: Resumen por Rango de Fechas
 async function actualizarGraficaRango() {
-    const fechaInicio = document.getElementById('fechaInicio').value;
-    const fechaFin = document.getElementById('fechaFin').value;
-    const tipoValor = document.getElementById('tipoValor').value;
-    const response = await fetch('http://127.0.0.1:5000/consultar');
-    const data = await response.json();
-    const autorizaciones = data.LISTAAUTORIZACIONES;
+    const fechaInicio = document.getElementById('fechaInicio').value; // Obtiene la fecha de inicio seleccionada por el usuario
+    const fechaFin = document.getElementById('fechaFin').value; // Obtiene la fecha de fin seleccionada por el usuario
+    const tipoValor = document.getElementById('tipoValor').value; // Obtiene el tipo de valor seleccionado (IVA, VALOR, TOTAL)
+    const response = await fetch('http://127.0.0.1:5000/consultar'); // Realiza una solicitud a la API para obtener los datos
+    const data = await response.json(); // Convierte la respuesta en formato JSON
+    const autorizaciones = data.LISTAAUTORIZACIONES; // Obtiene la lista de autorizaciones del JSON
 
     // Agrupar datos por fecha
-    const valoresPorFecha = {};
-    autorizaciones.forEach(auth => {
-        const fecha = auth.FECHA;
-        auth.LISTADO_AUTORIZACIONES.APROBACION.forEach(aprob => {
-            if (!valoresPorFecha[fecha]) {
-                valoresPorFecha[fecha] = { IVA: 0, VALOR: 0, TOTAL: 0 };
+    const valoresPorFecha = {}; // Objeto para almacenar los valores agrupados por fecha
+    autorizaciones.forEach(auth => { // Itera sobre cada autorización
+        const fecha = auth.FECHA; // Obtiene la fecha de la autorización
+        auth.LISTADO_AUTORIZACIONES.APROBACION.forEach(aprob => { // Itera sobre cada aprobación dentro de la autorización
+            if (!valoresPorFecha[fecha]) { // Si la fecha no existe en el objeto, la inicializa
+                valoresPorFecha[fecha] = { IVA: 0, VALOR: 0, TOTAL: 0 }; // Inicializa los valores de IVA, VALOR y TOTAL en 0
             }
-            valoresPorFecha[fecha].IVA += aprob.IVA;
-            valoresPorFecha[fecha].VALOR += aprob.VALOR;
-            valoresPorFecha[fecha].TOTAL += aprob.TOTAL;
+            valoresPorFecha[fecha].IVA += aprob.IVA; // Suma el IVA de la aprobación a la fecha correspondiente
+            valoresPorFecha[fecha].VALOR += aprob.VALOR; // Suma el VALOR de la aprobación a la fecha correspondiente
+            valoresPorFecha[fecha].TOTAL += aprob.TOTAL; // Suma el TOTAL de la aprobación a la fecha correspondiente
         });
     });
 
     // Filtrar por rango de fechas
-    const fechasFiltradas = Object.keys(valoresPorFecha).filter(fecha => {
-        const fechaDate = parseDate(fecha);
-        const inicioDate = parseDate(fechaInicio);
-        const finDate = parseDate(fechaFin);
-        return fechaDate >= inicioDate && fechaDate <= finDate;
-    }).sort((a, b) => parseDate(a) - parseDate(b));
+    const fechasFiltradas = Object.keys(valoresPorFecha).filter(fecha => { // Filtra las fechas dentro del rango seleccionado
+        const fechaDate = parseDate(fecha); // Convierte la fecha actual a un objeto Date
+        const inicioDate = parseDate(fechaInicio); // Convierte la fecha de inicio a un objeto Date
+        const finDate = parseDate(fechaFin); // Convierte la fecha de fin a un objeto Date
+        return fechaDate >= inicioDate && fechaDate <= finDate; // Retorna solo las fechas dentro del rango
+    }).sort((a, b) => parseDate(a) - parseDate(b)); // Ordena las fechas filtradas de forma ascendente
 
-    const valoresFiltrados = fechasFiltradas.map(fecha => valoresPorFecha[fecha][tipoValor]);
+    const valoresFiltrados = fechasFiltradas.map(fecha => valoresPorFecha[fecha][tipoValor]); // Obtiene los valores del tipo seleccionado para las fechas filtradas
 
     // Destruir gráfica existente si existe
-    if (chartRangoFechas) {
-        chartRangoFechas.destroy();
+    if (chartRangoFechas) { // Verifica si ya existe una gráfica previa
+        chartRangoFechas.destroy(); // Destruye la gráfica existente
     }
 
     // Crear nueva gráfica
-    const ctx = document.getElementById('chartRangoFechas').getContext('2d');
-    chartRangoFechas = new Chart(ctx, {
-        type: 'line',
+    const ctx = document.getElementById('chartRangoFechas').getContext('2d'); // Obtiene el contexto del canvas para la gráfica
+    chartRangoFechas = new Chart(ctx, { // Crea una nueva instancia de Chart.js
+        type: 'line', // Tipo de gráfica: línea
         data: {
-            labels: fechasFiltradas,
+            labels: fechasFiltradas, // Etiquetas (fechas filtradas)
             datasets: [{
-                label: 'Valores Autorizados',
-                data: valoresFiltrados,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                fill: false
+                label: 'Valores Autorizados', // Etiqueta del conjunto de datos
+                data: valoresFiltrados, // Valores correspondientes a las fechas filtradas
+                borderColor: 'rgba(75, 192, 192, 1)', // Color de la línea
+                fill: false // No rellenar el área bajo la línea
             }]
         },
         options: {
             scales: {
-                x: { title: { display: true, text: 'Fecha' } },
-                y: { title: { display: true, text: 'Valor (Q)' }, beginAtZero: true }
+                x: { title: { display: true, text: 'Fecha' } }, // Configuración del eje X con título
+                y: { title: { display: true, text: 'Valor (Q)' }, beginAtZero: true } // Configuración del eje Y con título y comenzando desde cero
             }
         }
     });
 }
 
 // Cargar gráficas al cargar la página
-document.addEventListener('DOMContentLoaded', () => {
-    actualizarGraficaIVA();
-    actualizarGraficaRango();
+document.addEventListener('DOMContentLoaded', () => { // Escucha el evento de carga completa del DOM
+    actualizarGraficaIVA(); // Llama a la función para actualizar la gráfica de IVA
+    actualizarGraficaRango(); // Llama a la función para actualizar la gráfica de rango de fechas
 });
 </script>
 {% endblock %}

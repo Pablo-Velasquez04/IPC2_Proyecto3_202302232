@@ -1,43 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
+<!-- Define el tipo de documento como HTML5 y establece el idioma del contenido como español. -->
+
 <head>
     <meta charset="UTF-8">
+    <!-- Especifica la codificación de caracteres como UTF-8 para soportar caracteres especiales. -->
+
     <title>Proyecto 3 - IPC2</title>
+    <!-- Define el título de la página que aparecerá en la pestaña del navegador. -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Incluye el archivo CSS de Bootstrap desde un CDN para estilos predefinidos. -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Incluye el archivo JavaScript de Bootstrap desde un CDN para funcionalidades dinámicas. -->
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Incluye la biblioteca Chart.js desde un CDN para crear gráficos interactivos. -->
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <!-- Crea una barra de navegación con estilo oscuro y diseño expandible en pantallas grandes. -->
+
         <div class="container-fluid">
+            <!-- Contenedor fluido para que la barra de navegación ocupe todo el ancho disponible. -->
+
             <a class="navbar-brand" href="#">DTE Autorizador</a>
+            <!-- Define el nombre o logo de la aplicación como un enlace. -->
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            <!-- Botón para colapsar o expandir el menú en dispositivos pequeños. -->
+
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Contenedor para los elementos del menú que se colapsan en pantallas pequeñas. -->
+
                 <ul class="navbar-nav">
+                    <!-- Lista de navegación para los enlaces del menú. -->
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'upload' %}">Cargar Archivo</a>
+                        <!-- Enlace al apartado de cargar archivo, utilizando una URL dinámica de Django. -->
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'consult' %}">Consultar Datos</a>
+                        <!-- Enlace al apartado de consulta de datos. -->
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'iva_summary' %}">Resumen IVA</a>
+                        <!-- Enlace al apartado de resumen de IVA. -->
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'range_summary' %}">Resumen por Fechas</a>
+                        <!-- Enlace al apartado de resumen por rango de fechas. -->
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'help' %}">Ayuda</a>
+                        <!-- Enlace al apartado de ayuda. -->
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
+
     <div class="container mt-4">
+        <!-- Contenedor principal con un margen superior para el contenido de la página. -->
+
         {% block content %}
         {% endblock %}
+        <!-- Bloque de contenido dinámico que será reemplazado por plantillas hijas en Django. -->
     </div>
 </body>
 </html>

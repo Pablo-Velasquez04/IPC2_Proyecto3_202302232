@@ -1,11 +1,30 @@
-{% extends 'base.html' %}
-{% block content %}
-<h1>Cargar Archivo XML</h1>
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
+{% extends 'base.html' %} 
+<!-- Extiende la plantilla base.html para reutilizar su estructura y estilos -->
+
+{% block content %} 
+<!-- Inicia un bloque de contenido que será insertado en la plantilla base -->
+
+<h1>Cargar Archivo XML</h1> 
+<!-- Título principal de la página -->
+
+{% if messages %} 
+<!-- Verifica si hay mensajes para mostrar (generalmente usados para notificaciones o alertas) -->
+
+    {% for message in messages %} 
+    <!-- Itera sobre los mensajes disponibles -->
+
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+        <!-- Muestra cada mensaje en un div con una clase de estilo condicional (éxito o error) -->
+            {{ message }}
+            <!-- Contenido del mensaje -->
+        </div>
+
+    {% endfor %} 
+    <!-- Fin del bucle de mensajes -->
+
+{% endif %} 
+<!-- Fin de la verificación de mensajes -->
+
 <style>
     .mb-3 {
         display: inline-block;
@@ -17,22 +36,48 @@
         font-family: monospace; /* Usa una fuente monoespaciada para mejor legibilidad */
     }
 </style>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="mb-3">
-        <h3>Entrada</h3>
-        <textarea name="entrada" rows="10" cols="50" placeholder="Pega el XML aquí" class="form-control">{{ entrada }}</textarea>
+<!-- Estilos CSS específicos para los elementos de la página -->
+
+<form method="post" enctype="multipart/form-data"> 
+<!-- Inicia un formulario que envía datos mediante POST y permite la carga de archivos -->
+
+    {% csrf_token %} 
+    <!-- Token de seguridad para proteger contra ataques CSRF -->
+
+    <div class="mb-3"> 
+    <!-- Contenedor para el área de texto de entrada -->
+        <h3>Entrada</h3> 
+        <!-- Subtítulo para la entrada -->
+        <textarea name="entrada" rows="10" cols="50" placeholder="Pega el XML aquí" class="form-control">{{ entrada }}</textarea> 
+        <!-- Área de texto para que el usuario pegue el contenido XML -->
     </div>
-    <div class="mb-3">
-        <h3>Salida</h3>
-        <textarea name="salida" rows="10" cols="50" readonly class="form-control">{{ salida }}</textarea>
+
+    <div class="mb-3"> 
+    <!-- Contenedor para el área de texto de salida -->
+        <h3>Salida</h3> 
+        <!-- Subtítulo para la salida -->
+        <textarea name="salida" rows="10" cols="50" readonly class="form-control">{{ salida }}</textarea> 
+        <!-- Área de texto de solo lectura para mostrar el resultado procesado -->
     </div>
-    <div class="mb-3">
-        <label for="xml_file" class="form-label">O Seleccionar Archivo XML</label>
-        <input type="file" class="form-control" id="xml_file" name="xml_file" accept=".xml">
+
+    <div class="mb-3"> 
+    <!-- Contenedor para la selección de archivo -->
+        <label for="xml_file" class="form-label">O Seleccionar Archivo XML</label> 
+        <!-- Etiqueta para el campo de selección de archivo -->
+        <input type="file" class="form-control" id="xml_file" name="xml_file" accept=".xml"> 
+        <!-- Campo para cargar un archivo XML -->
     </div>
-    <button type="submit" class="btn btn-primary">Cargar</button>
-    <a href="{% url 'send' %}" class="btn btn-success">Enviar</a>
-    <a href="{% url 'reset' %}" class="btn btn-danger">Reset</a>
-</form>
-{% endblock %}
+
+    <button type="submit" class="btn btn-primary">Cargar</button> 
+    <!-- Botón para enviar el formulario -->
+
+    <a href="{% url 'send' %}" class="btn btn-success">Enviar</a> 
+    <!-- Enlace para enviar los datos procesados a otra vista -->
+
+    <a href="{% url 'reset' %}" class="btn btn-danger">Reset</a> 
+    <!-- Enlace para reiniciar el formulario o los datos -->
+</form> 
+<!-- Fin del formulario -->
+
+{% endblock %} 
+<!-- Fin del bloque de contenido -->

@@ -1,21 +1,34 @@
 {% extends 'base.html' %}
+<!-- Extiende la plantilla base.html, lo que permite reutilizar la estructura base del sitio -->
+
 {% block content %}
+<!-- Define un bloque de contenido que se insertará en la plantilla base -->
+
 <h1>Resumen por Rango de Fechas</h1>
+<!-- Título principal de la página -->
+
 {% if messages %}
     {% for message in messages %}
         <div class="alert alert-danger">{{ message }}</div>
     {% endfor %}
 {% endif %}
+<!-- Si hay mensajes (por ejemplo, errores), se muestran en alertas -->
+
 <form method="post">
     {% csrf_token %}
+    <!-- Formulario para filtrar datos por rango de fechas y tipo de valor -->
     <div class="mb-3">
         <label for="start_date" class="form-label">Fecha Inicio</label>
         <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
     </div>
+    <!-- Campo para seleccionar la fecha de inicio -->
+
     <div class="mb-3">
         <label for="end_date" class="form-label">Fecha Fin</label>
         <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
     </div>
+    <!-- Campo para seleccionar la fecha de fin -->
+
     <div class="mb-3">
         <label for="value_type" class="form-label">Tipo de Valor</label>
         <select class="form-control" id="value_type" name="value_type">
@@ -23,14 +36,23 @@
             <option value="sin_iva" {% if value_type == 'sin_iva' %}selected{% endif %}>Sin IVA</option>
         </select>
     </div>
+    <!-- Campo para seleccionar el tipo de valor (total o sin IVA) -->
+
     <button type="submit" class="btn btn-primary">Filtrar</button>
+    <!-- Botón para enviar el formulario -->
 </form>
+
 {% if range_data_json %}
-    <!-- Pasar los datos como JSON -->
+    <!-- Si hay datos en formato JSON, se procesan para generar un gráfico -->
+
     <script id="range-data" type="application/json">
         {{ range_data_json|safe }}
     </script>
+    <!-- Inserta los datos JSON en un script para ser utilizados en JavaScript -->
+
     <canvas id="rangeChart" class="mt-4"></canvas>
+    <!-- Lienzo donde se dibujará el gráfico -->
+
     <script>
         // Obtener los datos del script
         const rangeData = JSON.parse(document.getElementById('range-data').textContent);
@@ -73,7 +95,11 @@
             }
         });
     </script>
+    <!-- Genera un gráfico de línea utilizando Chart.js con los datos proporcionados -->
 {% else %}
     <p>No hay datos para mostrar.</p>
+    <!-- Si no hay datos, muestra un mensaje indicando que no hay información -->
 {% endif %}
+
 {% endblock %}
+<!-- Finaliza el bloque de contenido -->
